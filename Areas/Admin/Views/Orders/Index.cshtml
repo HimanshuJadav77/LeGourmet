@@ -1,0 +1,144 @@
+@model List<Restaurant_Management.Models.Entities.Order>
+@{
+    ViewData["Title"] = "POS Live Orders";
+    var currentStatus = ViewBag.CurrentStatus as string ?? "All";
+    var activeCount = (int)(ViewBag.ActiveCount ?? 0);
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-extrabold text-dark mb-1">POS & Kitchen Orders</h2>
+        <p class="text-secondary small mb-0">Live order status workflow state machine: Placed &rarr; Preparing &rarr; Ready &rarr; Completed</p>
+    </div>
+    <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold">
+        <i class="bi bi-fire me-1"></i> @activeCount Active Orders
+    </span>
+</div>
+
+<!-- Status Workflow Tabs & Search Bar -->
+<div class="card border-0 shadow-sm rounded-4 p-3 bg-white mb-4">
+    <div class="row g-3 align-items-center justify-content-between">
+        <div class="col-md-7">
+            <div class="d-flex flex-wrap gap-2">
+                <a asp-action="Index" asp-route-status="All" class="btn btn-sm rounded-pill @(currentStatus == "All" ? "btn-dark" : "btn-outline-secondary")">
+                    All Orders
+                </a>
+                <a asp-action="Index" asp-route-status="Placed" class="btn btn-sm rounded-pill @(currentStatus == "Placed" ? "btn-info text-dark fw-bold" : "btn-outline-info text-dark")">
+                    <i class="bi bi-bell-fill me-1"></i> Placed
+                </a>
+                <a asp-action="Index" asp-route-status="Preparing" class="btn btn-sm rounded-pill @(currentStatus == "Preparing" ? "btn-warning text-dark fw-bold" : "btn-outline-warning text-dark")">
+                    <i class="bi bi-fire me-1"></i> In Kitchen
+                </a>
+                <a asp-action="Index" asp-route-status="Ready" class="btn btn-sm rounded-pill @(currentStatus == "Ready" ? "btn-primary fw-bold" : "btn-outline-primary")">
+                    <i class="bi bi-check-all me-1"></i> Ready
+                </a>
+                <a asp-action="Index" asp-route-status="Completed" class="btn btn-sm rounded-pill @(currentStatus == "Completed" ? "btn-success fw-bold" : "btn-outline-success")">
+                    <i class="bi bi-patch-check-fill me-1"></i> Completed
+                </a>
+            </div>
+        </div>
+
+        <div class="col-md-5">
+            <form method="get" asp-action="Index">
+                <input type="hidden" name="status" value="@currentStatus" />
+                <div class="input-group input-group-sm">
+                    <input type="text" name="search" class="form-control bg-light" placeholder="Search Order # or Customer..." value="@ViewBag.CurrentSearch" />
+                    <button class="btn btn-dark" type="submit"><i class="bi bi-search"></i></button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Orders Table -->
+<div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light text-secondary small text-uppercase">
+                <tr>
+                    <th>Order #</th>
+                    <th>Time</th>
+                    <th>Dining / Table</th>
+                    <th>Customer</th>
+                    <th>Items Ordered</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th class="text-end">Advance Workflow (AJAX)</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="8" class="text-center py-5 text-secondary">
+                            <i class="bi bi-inbox fs-2 d-block mb-2 text-muted"></i>
+                            No orders found matching the filter criteria.
+                        </td>
+                    </tr>
+                }
+                @foreach (var order in Model)
+                {
+                    <tr id="orderRow-@order.OrderId">
+                        <td class="fw-bold text-dark">
+                            <a asp-action="Details" asp-route-id="@order.OrderId" class="text-decoration-none text-dark">
+                                @order.OrderNumber
+                            </a>
+                        </td>
+                        <td>
+                            <div class="small fw-semibold text-dark">@order.OrderDate.ToString("hh:mm tt")</div>
+                            <small class="text-secondary">@order.OrderDate.ToString("dd MMM")</small>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark border">@order.OrderType</span>
+                            @if (order.Table != null)
+                            {
+                                <small class="text-secondary d-block fw-semibold">Table @order.Table.TableNumber</small>
+                            }
+                        </td>
+                        <td>
+                            <div class="fw-semibold text-dark small">@order.CustomerName</div>
+                            <small class="text-secondary">@(string.IsNullOrEmpty(order.CustomerPhone) ? "No phone" : order.CustomerPhone)</small>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary-subtle text-secondary">@order.OrderItems.Sum(i => i.Quantity) Items</span>
+                            <small class="text-secondary d-block text-truncate" style="max-width: 180px;">
+                                @string.Join(", ", order.OrderItems.Select(oi => oi.MenuItem?.Name))
+                            </small>
+                        </td>
+                        <td class="fw-extrabold text-success">
+                            @Html.FormatCurrency(order.TotalAmount)
+                        </td>
+                        <td id="statusCell-@order.OrderId">
+                            <status-badge status="@order.OrderStatus"></status-badge>
+                        </td>
+                        <td class="text-end">
+                            <div class="btn-group btn-group-sm">
+                                @if (order.OrderStatus == "Placed")
+                                {
+                                    <button type="button" class="btn btn-warning" onclick="RestaurantApp.updateOrderStatus(@order.OrderId, 'Preparing')">
+                                        <i class="bi bi-fire me-1"></i> Send to Kitchen
+                                    </button>
+                                }
+                                else if (order.OrderStatus == "Preparing")
+                                {
+                                    <button type="button" class="btn btn-primary" onclick="RestaurantApp.updateOrderStatus(@order.OrderId, 'Ready')">
+                                        <i class="bi bi-bell-fill me-1"></i> Mark Ready
+                                    </button>
+                                }
+                                else if (order.OrderStatus == "Ready")
+                                {
+                                    <button type="button" class="btn btn-success" onclick="RestaurantApp.updateOrderStatus(@order.OrderId, 'Completed')">
+                                        <i class="bi bi-check-lg me-1"></i> Complete Order
+                                    </button>
+                                }
+                                <a asp-action="Details" asp-route-id="@order.OrderId" class="btn btn-outline-dark" title="View Bill & Details">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

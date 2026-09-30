@@ -1,0 +1,93 @@
+@model List<Restaurant_Management.Models.Entities.Order>
+@{
+    ViewData["Title"] = "My Orders";
+}
+
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="fw-extrabold text-dark mb-1">My Past Orders</h1>
+            <p class="text-secondary small mb-0">Review past invoices, receipts, and order statuses</p>
+        </div>
+        <a asp-controller="Menu" asp-action="Index" class="btn btn-gold rounded-pill px-4">
+            <i class="bi bi-plus-lg me-1"></i> Order More Food
+        </a>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white">
+            <i class="bi bi-receipt-cutoff fs-1 text-muted d-block mb-3"></i>
+            <h4 class="fw-bold">No order history found</h4>
+            <p class="text-secondary mb-4">Track a recent guest order or browse our menu:</p>
+            <div class="d-flex justify-content-center gap-3">
+                <a asp-controller="Order" asp-action="Track" class="btn btn-outline-dark rounded-pill px-4">
+                    <i class="bi bi-search me-1"></i> Track by Order #
+                </a>
+                <a asp-controller="Menu" asp-action="Index" class="btn btn-gold rounded-pill px-4">
+                    Explore Menu
+                </a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light text-secondary small text-uppercase">
+                        <tr>
+                            <th>Order #</th>
+                            <th>Date & Time</th>
+                            <th>Dining Mode</th>
+                            <th>Dishes</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th class="text-end">Receipt</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var order in Model)
+                        {
+                            <tr>
+                                <td class="fw-bold text-dark">
+                                    <a asp-controller="Order" asp-action="Track" asp-route-orderNumber="@order.OrderNumber" class="text-decoration-none text-dark">
+                                        @order.OrderNumber
+                                    </a>
+                                </td>
+                                <td>
+                                    <div class="fw-semibold text-dark">@order.OrderDate.ToString("dd MMM yyyy")</div>
+                                    <small class="text-secondary">@order.OrderDate.ToString("hh:mm tt")</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">@order.OrderType</span>
+                                    @if (order.Table != null)
+                                    {
+                                        <small class="text-secondary d-block">Table @order.Table.TableNumber</small>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="fw-bold text-dark">@order.OrderItems.Count Items</span>
+                                    <small class="text-secondary d-block text-truncate" style="max-width: 200px;">
+                                        @string.Join(", ", order.OrderItems.Select(oi => oi.MenuItem?.Name))
+                                    </small>
+                                </td>
+                                <td class="fw-extrabold text-success">
+                                    @Html.FormatCurrency(order.TotalAmount)
+                                </td>
+                                <td>
+                                    <status-badge status="@order.OrderStatus"></status-badge>
+                                </td>
+                                <td class="text-end">
+                                    <a asp-controller="Checkout" asp-action="Receipt" asp-route-orderNumber="@order.OrderNumber" class="btn btn-outline-dark btn-sm rounded-pill px-3">
+                                        <i class="bi bi-printer me-1"></i> Invoice
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>

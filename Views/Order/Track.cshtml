@@ -1,0 +1,146 @@
+@model Restaurant_Management.Models.Entities.Order
+@{
+    ViewData["Title"] = "Track Live Order Status";
+}
+
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-3 py-2 rounded-pill fw-bold mb-2">
+            REAL-TIME KITCHEN WORKFLOW
+        </span>
+        <h1 class="display-5 fw-extrabold text-dark">Live Order Status Tracker</h1>
+        <p class="text-secondary mx-auto" style="max-width: 580px;">
+            Follow your culinary journey from kitchen preparation to table serving in real-time.
+        </p>
+    </div>
+
+    <!-- Order Search / Lookup Form -->
+    <div class="row justify-content-center mb-5">
+        <div class="col-md-7 col-lg-6">
+            <form method="get" asp-controller="Order" asp-action="Track" class="p-3 bg-white rounded-4 shadow-sm border">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" name="orderNumber" class="form-control border-start-0" 
+                           placeholder="Enter Order # (e.g. ORD-2026-...)" 
+                           value="@(Model?.OrderNumber ?? "")" required />
+                    <button type="submit" class="btn btn-gold px-4 fw-bold">Track Status</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @if (Model != null)
+    {
+        <div class="card border-0 shadow-sm rounded-4 bg-white p-4 p-md-5 mb-4 mx-auto" style="max-width: 860px;">
+            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center border-bottom pb-4 mb-4 gap-2">
+                <div>
+                    <h3 class="fw-extrabold text-dark mb-1">Order #@Model.OrderNumber</h3>
+                    <div class="text-secondary small">Placed on @Model.OrderDate.ToString("dd MMM yyyy, hh:mm tt")</div>
+                </div>
+                <div>
+                    <status-badge status="@Model.OrderStatus"></status-badge>
+                </div>
+            </div>
+
+            <!-- Visual Workflow Progress Stepper -->
+            <div class="py-4 my-2">
+                @{
+                    var status = Model.OrderStatus;
+                    int step = status switch
+                    {
+                        "Placed" => 1,
+                        "Preparing" => 2,
+                        "Ready" => 3,
+                        "Served" => 4,
+                        "Completed" => 4,
+                        "Cancelled" => 0,
+                        _ => 1
+                    };
+                }
+
+                @if (status == "Cancelled")
+                {
+                    <div class="alert alert-secondary text-center py-3">
+                        <i class="bi bi-x-circle fs-3 text-danger d-block mb-1"></i>
+                        <h6 class="fw-bold text-dark">This order was cancelled</h6>
+                    </div>
+                }
+                else
+                {
+                    <div class="position-relative m-4">
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-warning" role="progressbar" style="width: @((step - 1) * 33.3)%;"></div>
+                        </div>
+                        <div class="position-absolute top-0 start-0 translate-middle btn btn-sm rounded-pill @(step >= 1 ? "btn-warning" : "btn-light border")" style="width: 2.2rem; height:2.2rem;">
+                            <i class="bi bi-receipt"></i>
+                        </div>
+                        <div class="position-absolute top-0 start-33 translate-middle btn btn-sm rounded-pill @(step >= 2 ? "btn-warning" : "btn-light border")" style="left: 33.3%; width: 2.2rem; height:2.2rem;">
+                            <i class="bi bi-fire"></i>
+                        </div>
+                        <div class="position-absolute top-0 start-66 translate-middle btn btn-sm rounded-pill @(step >= 3 ? "btn-warning" : "btn-light border")" style="left: 66.6%; width: 2.2rem; height:2.2rem;">
+                            <i class="bi bi-bell"></i>
+                        </div>
+                        <div class="position-absolute top-0 start-100 translate-middle btn btn-sm rounded-pill @(step >= 4 ? "btn-success" : "btn-light border")" style="width: 2.2rem; height:2.2rem;">
+                            <i class="bi bi-check-lg"></i>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between text-center small text-secondary px-2 mt-2">
+                        <div class="@(step >= 1 ? "fw-bold text-dark" : "")">1. Placed</div>
+                        <div class="@(step >= 2 ? "fw-bold text-dark" : "")">2. In Kitchen</div>
+                        <div class="@(step >= 3 ? "fw-bold text-dark" : "")">3. Food Ready</div>
+                        <div class="@(step >= 4 ? "fw-bold text-success" : "")">4. Served / Completed</div>
+                    </div>
+                }
+            </div>
+
+            <!-- Order Information Box -->
+            <div class="row g-3 p-3 rounded-3 bg-light border mb-4">
+                <div class="col-sm-6 col-md-3">
+                    <span class="text-secondary small d-block">Customer</span>
+                    <span class="fw-bold text-dark">@Model.CustomerName</span>
+                </div>
+                <div class="col-sm-6 col-md-3">
+                    <span class="text-secondary small d-block">Dining Mode</span>
+                    <span class="fw-semibold text-dark">@Model.OrderType</span>
+                </div>
+                <div class="col-sm-6 col-md-3">
+                    <span class="text-secondary small d-block">Table #</span>
+                    <span class="fw-bold text-primary">@(Model.Table != null ? $"Table {Model.Table.TableNumber} ({Model.Table.Location})" : "Takeaway")</span>
+                </div>
+                <div class="col-sm-6 col-md-3">
+                    <span class="text-secondary small d-block">Payment Status</span>
+                    <span class="badge bg-success">@(Model.PaymentTransaction?.Status ?? "Completed")</span>
+                </div>
+            </div>
+
+            <!-- Ordered Dishes -->
+            <h6 class="fw-bold mb-3 text-dark">Ordered Items (@Model.OrderItems.Count)</h6>
+            <div class="list-group list-group-flush border-top mb-4">
+                @foreach (var item in Model.OrderItems)
+                {
+                    <div class="list-group-item px-0 py-3 d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="badge bg-light text-dark border fw-bold">@item.Quantity ×</span>
+                            <div>
+                                <div class="fw-semibold text-dark">@(item.MenuItem?.Name ?? "Delicious Dish")</div>
+                                <div class="text-secondary fs-8">Rate: @Html.FormatCurrency(item.UnitPrice)</div>
+                            </div>
+                        </div>
+                        <div class="fw-bold text-dark">@Html.FormatCurrency(item.LineTotal)</div>
+                    </div>
+                }
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                <div>
+                    <span class="text-secondary small d-block">Total Settled Amount</span>
+                    <span class="fs-4 fw-extrabold text-success">@Html.FormatCurrency(Model.TotalAmount)</span>
+                </div>
+                <a asp-controller="Checkout" asp-action="Receipt" asp-route-orderNumber="@Model.OrderNumber" class="btn btn-outline-dark rounded-pill px-4">
+                    <i class="bi bi-file-earmark-text me-1"></i> View Tax Invoice
+                </a>
+            </div>
+        </div>
+    }
+</div>

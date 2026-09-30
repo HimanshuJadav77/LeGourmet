@@ -1,0 +1,112 @@
+@model Restaurant_Management.Models.Entities.MenuItem
+@{
+    ViewData["Title"] = $"Edit - {Model.Name}";
+}
+
+<div class="container-fluid py-2" style="max-width: 800px;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a asp-action="Index">Menu Items</a></li>
+                    <li class="breadcrumb-item active">Edit Dish</li>
+                </ol>
+            </nav>
+            <h3 class="fw-extrabold text-dark mb-0">Modify Menu Dish: @Model.Name</h3>
+        </div>
+        <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-3">&larr; Back to List</a>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
+        <form asp-action="Edit" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="MenuItemId" />
+            <input type="hidden" asp-for="CreatedAt" />
+
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger small py-2 rounded-3" role="alert"></div>
+
+            <div class="row g-3">
+                <div class="col-md-8">
+                    <label asp-for="Name" class="form-label small fw-semibold text-secondary"></label>
+                    <input asp-for="Name" class="form-control" />
+                    <span asp-validation-for="Name" class="text-danger small"></span>
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="CategoryId" class="form-label small fw-semibold text-secondary"></label>
+                    <select asp-for="CategoryId" class="form-select" asp-items="ViewBag.CategoryId"></select>
+                    <span asp-validation-for="CategoryId" class="text-danger small"></span>
+                </div>
+
+                <div class="col-12">
+                    <label asp-for="Description" class="form-label small fw-semibold text-secondary"></label>
+                    <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                    <span asp-validation-for="Description" class="text-danger small"></span>
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="Price" class="form-label small fw-semibold text-secondary"></label>
+                    <div class="input-group">
+                        <span class="input-group-text">₹</span>
+                        <input asp-for="Price" class="form-control" type="number" step="0.01" />
+                    </div>
+                    <span asp-validation-for="Price" class="text-danger small"></span>
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="PreparationTimeMinutes" class="form-label small fw-semibold text-secondary"></label>
+                    <div class="input-group">
+                        <input asp-for="PreparationTimeMinutes" class="form-control" type="number" min="1" max="120" />
+                        <span class="input-group-text">mins</span>
+                    </div>
+                    <span asp-validation-for="PreparationTimeMinutes" class="text-danger small"></span>
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="SpicyLevel" class="form-label small fw-semibold text-secondary"></label>
+                    <select asp-for="SpicyLevel" class="form-select">
+                        <option value="0">0 - Mild / Non-Spicy</option>
+                        <option value="1">1 - Medium</option>
+                        <option value="2">2 - Hot</option>
+                        <option value="3">3 - Extra Fiery</option>
+                    </select>
+                </div>
+
+                <div class="col-12">
+                    <label asp-for="ImageUrl" class="form-label small fw-semibold text-secondary"></label>
+                    <input asp-for="ImageUrl" class="form-control" />
+                    <span asp-validation-for="ImageUrl" class="text-danger small"></span>
+                </div>
+
+                <div class="col-md-6 pt-2">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" asp-for="IsVegetarian" id="isVegCheck" />
+                        <label class="form-check-label fw-semibold text-success" for="isVegCheck">
+                            Pure Vegetarian Dish
+                        </label>
+                    </div>
+                </div>
+
+                <div class="col-md-6 pt-2">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" asp-for="IsAvailable" id="isAvailCheck" />
+                        <label class="form-check-label fw-semibold text-dark" for="isAvailCheck">
+                            Available in Menu & POS
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4 pt-3 border-top d-flex justify-content-end gap-2">
+                <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">Cancel</a>
+                <button type="submit" class="btn btn-warning rounded-pill px-5 fw-bold shadow-sm">
+                    Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

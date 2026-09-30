@@ -1,0 +1,454 @@
+@model Restaurant_Management.Models.ViewModels.DashboardReportsViewModel
+@using Restaurant_Management.Models.Entities
+@{
+    ViewData["Title"] = "Demand & Transactional LINQ Reports";
+    var categories = ViewBag.Categories as List<Category> ?? new List<Category>();
+}
+
+<!-- Reports Header -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-2">
+    <div>
+        <span class="badge bg-danger text-white px-3 py-1 rounded-pill mb-1">
+            <i class="bi bi-cpu me-1"></i> LINQ Transactional Analytics Engine
+        </span>
+        <h2 class="fw-extrabold text-dark mb-0">Dynamic Demand & Operations Reports</h2>
+        <p class="text-secondary small mb-0">Powered by LINQ Query Syntax joins, Method Syntax groupings, and aggregations</p>
+    </div>
+
+    <!-- Filter Form -->
+    <form method="get" asp-action="Index" class="d-flex flex-wrap gap-2 align-items-center">
+        <input type="hidden" name="activeTab" id="activeTabInput" value="@Model.ActiveTab" />
+        
+        <div>
+            <input type="date" name="fromDate" class="form-control form-control-sm" value="@(Model.FromDate?.ToString("yyyy-MM-dd"))" title="From Date" />
+        </div>
+        <div>
+            <input type="date" name="toDate" class="form-control form-control-sm" value="@(Model.ToDate?.ToString("yyyy-MM-dd"))" title="To Date" />
+        </div>
+        <div>
+            <select name="categoryId" class="form-select form-select-sm">
+                <option value="">All Categories</option>
+                @foreach (var c in categories)
+                {
+                    <option value="@c.CategoryId" selected="@(Model.SelectedCategoryId == c.CategoryId)">@c.Name</option>
+                }
+            </select>
+        </div>
+        <button type="submit" class="btn btn-dark btn-sm rounded-pill px-3">
+            <i class="bi bi-funnel-fill me-1"></i> Filter
+        </button>
+        <a asp-action="Index" class="btn btn-outline-secondary btn-sm rounded-pill px-2" title="Reset Filters">
+            <i class="bi bi-arrow-counterclockwise"></i>
+        </a>
+    </form>
+</div>
+
+<!-- Report Navigation Tabs -->
+<ul class="nav nav-pills mb-4 gap-2 bg-white p-2 rounded-4 shadow-sm border" id="reportTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link @(Model.ActiveTab == "topSelling" ? "active" : "") rounded-pill px-4 fw-semibold" 
+                id="top-selling-tab" data-bs-toggle="pill" data-bs-target="#top-selling-pane" type="button" role="tab"
+                onclick="$('#activeTabInput').val('topSelling')">
+            <i class="bi bi-trophy-fill text-warning me-1"></i> 1. Top-Selling Food Items
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link @(Model.ActiveTab == "peakHours" ? "active" : "") rounded-pill px-4 fw-semibold" 
+                id="peak-hours-tab" data-bs-toggle="pill" data-bs-target="#peak-hours-pane" type="button" role="tab"
+                onclick="$('#activeTabInput').val('peakHours')">
+            <i class="bi bi-clock-history text-danger me-1"></i> 2. Peak Hour Sales Volume
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link @(Model.ActiveTab == "tableTurnover" ? "active" : "") rounded-pill px-4 fw-semibold" 
+                id="table-turnover-tab" data-bs-toggle="pill" data-bs-target="#table-turnover-pane" type="button" role="tab"
+                onclick="$('#activeTabInput').val('tableTurnover')">
+            <i class="bi bi-arrow-repeat text-success me-1"></i> 3. Table Turnover Report
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content" id="reportTabContent">
+    <!-- ================= REPORT 1: TOP SELLING FOOD ITEMS ================= -->
+    <div class="tab-pane fade @(Model.ActiveTab == "topSelling" ? "show active" : "")" id="top-selling-pane" role="tabpanel">
+        <div class="row g-4 mb-4">
+            <!-- Chart Container -->
+            <div class="col-lg-7">
+                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+                    <h5 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2">
+                        <i class="bi bi-bar-chart-fill text-warning"></i> Top 8 Best-Selling Dishes by Volume
+                    </h5>
+                    <p class="text-secondary small mb-3">LINQ Multi-Table Query Syntax Aggregation (OrderItems ⋈ MenuItems ⋈ Categories)</p>
+                    <div style="height: 320px;">
+                        <canvas id="topSellingChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Metric Summary Card -->
+            <div class="col-lg-5">
+                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+                    <h5 class="fw-bold text-dark mb-3">Top Food Revenue Share</h5>
+                    <div class="d-flex flex-column gap-3">
+                        @foreach (var item in Model.TopSellingItems.Take(5))
+                        {
+                            <div class="p-3 rounded-3 bg-light border">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="fw-bold text-dark">@item.ItemName</span>
+                                    <span class="badge bg-success-subtle text-success">@item.PercentageOfTotalRevenue% Share</span>
+                                </div>
+                                <div class="d-flex justify-content-between small text-secondary">
+                                    <span>Category: @item.CategoryName</span>
+                                    <span>Quantity Sold: <strong class="text-dark">@item.TotalQuantitySold</strong></span>
+                                </div>
+                                <div class="progress mt-2" style="height: 5px;">
+                                    <div class="progress-bar bg-warning" role="progressbar" style="width: @item.PercentageOfTotalRevenue%;"></div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Full Items Data Table -->
+        <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden">
+            <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                <h6 class="fw-bold mb-0 text-dark">Comprehensive Item Sales Breakdown</h6>
+                <span class="badge bg-dark text-white">@Model.TopSellingItems.Count Dishes Analyzed</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light text-secondary small text-uppercase">
+                        <tr>
+                            <th>Rank</th>
+                            <th>Dish Description</th>
+                            <th>Category</th>
+                            <th class="text-center">Dietary</th>
+                            <th class="text-center">Unit Price</th>
+                            <th class="text-center">Units Sold</th>
+                            <th class="text-end">Total Gross Revenue</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{ int rank = 1; }
+                        @foreach (var item in Model.TopSellingItems)
+                        {
+                            <tr>
+                                <td>
+                                    @if (rank == 1) { <span class="badge bg-warning text-dark px-2 py-1"><i class="bi bi-trophy-fill"></i> #1</span> }
+                                    else if (rank == 2) { <span class="badge bg-secondary text-white px-2 py-1">#2</span> }
+                                    else if (rank == 3) { <span class="badge bg-dark text-white px-2 py-1">#3</span> }
+                                    else { <span class="text-muted fw-bold ps-2">#@rank</span> }
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        @if (!string.IsNullOrEmpty(item.ImageUrl))
+                                        {
+                                            <img src="@item.ImageUrl" alt="@item.ItemName" class="rounded-2 object-fit-cover" style="width: 36px; height: 36px;" />
+                                        }
+                                        <span class="fw-bold text-dark">@item.ItemName</span>
+                                    </div>
+                                </td>
+                                <td><span class="badge bg-light text-dark border">@item.CategoryName</span></td>
+                                <td class="text-center">@Html.VegNonVegBadge(item.IsVegetarian)</td>
+                                <td class="text-center fw-semibold text-secondary">@Html.FormatCurrency(item.UnitPrice)</td>
+                                <td class="text-center fw-extrabold text-dark fs-6">@item.TotalQuantitySold</td>
+                                <td class="text-end fw-extrabold text-success">@Html.FormatCurrency(item.TotalRevenue)</td>
+                            </tr>
+                            rank++;
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= REPORT 2: PEAK HOUR SALES VOLUME ANALYSIS ================= -->
+    <div class="tab-pane fade @(Model.ActiveTab == "peakHours" ? "show active" : "")" id="peak-hours-pane" role="tabpanel">
+        <div class="row g-4 mb-4">
+            <!-- Peak Hour Line Chart -->
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+                    <h5 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2">
+                        <i class="bi bi-graph-up text-danger"></i> Peak Hours Order Density & Revenue Analysis
+                    </h5>
+                    <p class="text-secondary small mb-3">LINQ Method Syntax grouping by <code>OrderDate.Hour</code> (10:00 AM to 11:00 PM)</p>
+                    <div style="height: 320px;">
+                        <canvas id="peakHourChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Peak Insights Card -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+                    <h5 class="fw-bold text-dark mb-3">Kitchen Rush Insights</h5>
+                    
+                    <div class="p-3 rounded-3 bg-warning-subtle text-dark border border-warning-subtle mb-3">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <i class="bi bi-sun-fill text-warning fs-5"></i>
+                            <strong class="text-dark">Lunch Rush (12:30 PM - 02:30 PM)</strong>
+                        </div>
+                        <small class="text-secondary">High volume corporate orders and quick table rotations.</small>
+                    </div>
+
+                    <div class="p-3 rounded-3 bg-danger-subtle text-dark border border-danger-subtle mb-3">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <i class="bi bi-moon-stars-fill text-danger fs-5"></i>
+                            <strong class="text-dark">Dinner Peak (07:30 PM - 10:00 PM)</strong>
+                        </div>
+                        <small class="text-secondary">Highest gross basket value and extended dining durations.</small>
+                    </div>
+
+                    <div class="p-3 rounded-3 bg-light border">
+                        <span class="text-secondary small d-block">Peak Revenue Hour</span>
+                        @{
+                            var peakHour = Model.PeakHourSales.OrderByDescending(p => p.TotalSalesVolume).FirstOrDefault();
+                        }
+                        <div class="fs-4 fw-extrabold text-danger">
+                            @(peakHour != null ? peakHour.TimeLabel : "08:00 PM")
+                        </div>
+                        <small class="text-secondary">Volume: @(peakHour != null ? Html.FormatCurrency(peakHour.TotalSalesVolume) : "₹0")</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hourly Breakdown Table -->
+        <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden">
+            <div class="p-3 border-bottom">
+                <h6 class="fw-bold mb-0 text-dark">Hourly Transactional Metrics Table</h6>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light text-secondary small text-uppercase">
+                        <tr>
+                            <th>Operating Hour</th>
+                            <th>Classification</th>
+                            <th class="text-center">Orders Count</th>
+                            <th class="text-center">Average Ticket Value</th>
+                            <th class="text-end">Total Hourly Sales Volume</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var h in Model.PeakHourSales)
+                        {
+                            <tr class="@(h.IsPeakHour ? "table-warning bg-opacity-25" : "")">
+                                <td class="fw-bold text-dark">@h.TimeLabel</td>
+                                <td>
+                                    @if (h.IsPeakHour)
+                                    {
+                                        <span class="badge bg-danger rounded-pill"><i class="bi bi-fire me-1"></i> PEAK RUSH</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary-subtle text-secondary rounded-pill">Standard Flow</span>
+                                    }
+                                </td>
+                                <td class="text-center fw-bold">@h.TotalOrders Orders</td>
+                                <td class="text-center text-secondary">@Html.FormatCurrency(h.AverageOrderValue)</td>
+                                <td class="text-end fw-extrabold text-success">@Html.FormatCurrency(h.TotalSalesVolume)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= REPORT 3: TABLE TURNOVER REPORT ================= -->
+    <div class="tab-pane fade @(Model.ActiveTab == "tableTurnover" ? "show active" : "")" id="table-turnover-pane" role="tabpanel">
+        <div class="row g-4 mb-4">
+            <!-- Table Turnover Chart -->
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+                    <h5 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2">
+                        <i class="bi bi-arrow-repeat text-success"></i> Table Utilization & Turnover Efficiency
+                    </h5>
+                    <p class="text-secondary small mb-3">LINQ Relational Projections (DiningTables ⋈ TableReservations & Orders)</p>
+                    <div style="height: 320px;">
+                        <canvas id="turnoverChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table Summary Insights -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+                    <h5 class="fw-bold text-dark mb-3">Floor Efficiency Summary</h5>
+
+                    <div class="p-3 rounded-3 bg-light border mb-3">
+                        <span class="text-secondary small d-block">Overall Floor Tables</span>
+                        <div class="fs-4 fw-extrabold text-dark">@Model.TableTurnoverMetrics.Count Tables</div>
+                        <small class="text-secondary">Across Indoor, Window, Patio & VIP</small>
+                    </div>
+
+                    <div class="p-3 rounded-3 bg-light border mb-3">
+                        <span class="text-secondary small d-block">Average Seating Turnover</span>
+                        <div class="fs-4 fw-extrabold text-success">
+                            @(Model.TableTurnoverMetrics.Any() ? Math.Round(Model.TableTurnoverMetrics.Average(t => t.TurnoverRatePerDay), 1) : 0) Turns/Day
+                        </div>
+                        <small class="text-secondary">Parties seated per table per day</small>
+                    </div>
+
+                    <div class="p-3 rounded-3 bg-light border">
+                        <span class="text-secondary small d-block">Highest Revenue Table</span>
+                        @{
+                            var bestTable = Model.TableTurnoverMetrics.OrderByDescending(t => t.TotalRevenueGenerated).FirstOrDefault();
+                        }
+                        <div class="fs-4 fw-extrabold text-primary">
+                            @(bestTable != null ? $"Table {bestTable.TableNumber} ({bestTable.Location})" : "N/A")
+                        </div>
+                        <small class="text-secondary">Revenue: @(bestTable != null ? Html.FormatCurrency(bestTable.TotalRevenueGenerated) : "₹0")</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Table Turnover Data Grid -->
+        <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden">
+            <div class="p-3 border-bottom">
+                <h6 class="fw-bold mb-0 text-dark">Table-by-Table Turnover & Utilization Metrics</h6>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light text-secondary small text-uppercase">
+                        <tr>
+                            <th>Table #</th>
+                            <th>Location Area</th>
+                            <th class="text-center">Capacity</th>
+                            <th class="text-center">Reservations</th>
+                            <th class="text-center">Orders Served</th>
+                            <th class="text-center">Turnover Rate (Parties/Day)</th>
+                            <th class="text-center">Est. Occupancy %</th>
+                            <th class="text-end">Revenue Generated</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var t in Model.TableTurnoverMetrics)
+                        {
+                            <tr>
+                                <td class="fw-bold text-dark">Table @t.TableNumber</td>
+                                <td><span class="badge bg-light text-dark border">@t.Location</span></td>
+                                <td class="text-center"><i class="bi bi-person me-1"></i> @t.Capacity Guests</td>
+                                <td class="text-center fw-semibold text-secondary">@t.TotalReservations</td>
+                                <td class="text-center fw-semibold text-secondary">@t.TotalOrdersServed</td>
+                                <td class="text-center fw-bold text-dark">@t.TurnoverRatePerDay / day</td>
+                                <td class="text-center">
+                                    <span class="badge @(t.AverageOccupancyRate >= 60 ? "bg-success" : (t.AverageOccupancyRate >= 30 ? "bg-warning text-dark" : "bg-secondary")) rounded-pill">
+                                        @t.AverageOccupancyRate%
+                                    </span>
+                                </td>
+                                <td class="text-end fw-extrabold text-success">@Html.FormatCurrency(t.TotalRevenueGenerated)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Chart 1: Top Selling Items Horizontal Bar Chart
+            const topSellingCtx = document.getElementById('topSellingChart');
+            if (topSellingCtx) {
+                const topItems = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.TopSellingItems.Take(8).Select(x => new { x.ItemName, x.TotalQuantitySold, x.TotalRevenue })));
+                
+                new Chart(topSellingCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: topItems.map(i => i.ItemName),
+                        datasets: [{
+                            label: 'Quantity Sold',
+                            data: topItems.map(i => i.TotalQuantitySold),
+                            backgroundColor: '#c59b27',
+                            borderRadius: 8
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        scales: {
+                            x: { grid: { color: 'rgba(0,0,0,0.05)' } },
+                            y: { grid: { display: false } }
+                        }
+                    }
+                });
+            }
+
+            // Chart 2: Peak Hour Sales Line/Area Chart
+            const peakCtx = document.getElementById('peakHourChart');
+            if (peakCtx) {
+                const peakData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.PeakHourSales.Select(x => new { x.TimeLabel, x.TotalSalesVolume, x.TotalOrders })));
+
+                new Chart(peakCtx, {
+                    type: 'line',
+                    data: {
+                        labels: peakData.map(p => p.TimeLabel),
+                        datasets: [{
+                            label: 'Sales Volume (₹)',
+                            data: peakData.map(p => p.TotalSalesVolume),
+                            borderColor: '#dc2626',
+                            backgroundColor: 'rgba(220, 38, 38, 0.12)',
+                            fill: true,
+                            tension: 0.35,
+                            pointRadius: 4,
+                            pointHoverRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'top' }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: { color: 'rgba(0,0,0,0.05)' }
+                            },
+                            x: {
+                                grid: { display: false }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Chart 3: Table Turnover Bar Chart
+            const turnoverCtx = document.getElementById('turnoverChart');
+            if (turnoverCtx) {
+                const turnoverData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.TableTurnoverMetrics.Take(10).Select(x => new { x.TableNumber, x.TotalRevenueGenerated, x.TurnoverRatePerDay })));
+
+                new Chart(turnoverCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: turnoverData.map(t => 'Table ' + t.TableNumber),
+                        datasets: [{
+                            label: 'Revenue Generated (₹)',
+                            data: turnoverData.map(t => t.TotalRevenueGenerated),
+                            backgroundColor: '#2563eb',
+                            borderRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
+                            x: { grid: { display: false } }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+}

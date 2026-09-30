@@ -1,0 +1,20 @@
+@model Restaurant_Management.Models.ViewModels.OrderReceiptViewModel
+@{
+    ViewData["Title"] = $"Tax Invoice - {Model.OrderNumber}";
+}
+
+<div class="container py-5" style="max-width: 860px;">
+    <!-- Success Banner -->
+    <div class="alert alert-success d-flex align-items-center rounded-4 shadow-sm p-3 mb-4 no-print" role="alert">
+        <i class="bi bi-check-circle-fill fs-2 me-3 text-success"></i>
+        <div>
+            <h5 class="alert-heading fw-bold mb-1">Transaction Successful & Bill Settled!</h5>
+            <p class="mb-0 small">
+                Your payment of <strong>@Html.FormatCurrency(Model.TotalAmount)</strong> was processed successfully. The kitchen has received your order ticket.
+            </p>
+        </div>
+    </div>
+
+    <!-- Render Strongly-Typed Invoice Partial -->
+    @await Html.PartialAsync("_OrderReceiptPartial", Model)
+</div>

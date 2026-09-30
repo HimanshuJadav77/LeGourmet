@@ -1,0 +1,196 @@
+@using Restaurant_Management.Models.ViewModels
+@using Restaurant_Management.Models.Entities
+@{
+    ViewData["Title"] = "Operations Overview";
+    var kpis = ViewBag.KPIs as DashboardKpisDto ?? new DashboardKpisDto();
+    var recentOrders = ViewBag.RecentOrders as List<Order> ?? new List<Order>();
+    var upcomingReservations = ViewBag.UpcomingReservations as List<TableReservation> ?? new List<TableReservation>();
+}
+
+<!-- Dashboard Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-extrabold text-dark mb-1">Restaurant Management & POS</h2>
+        <div class="text-secondary small">Live administrative overview, kitchen workflow & sales intelligence</div>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-area="Admin" asp-controller="Orders" asp-action="Index" class="btn btn-outline-dark rounded-pill px-3">
+            <i class="bi bi-receipt-cutoff me-1"></i> Live POS
+        </a>
+        <a asp-area="Admin" asp-controller="Reports" asp-action="Index" class="btn btn-warning rounded-pill px-3 fw-bold">
+            <i class="bi bi-graph-up-arrow me-1"></i> View Dynamic Reports
+        </a>
+    </div>
+</div>
+
+<!-- KPI Cards Row -->
+<div class="row g-3 mb-4">
+    <div class="col-xl-3 col-sm-6">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="text-secondary small fw-semibold text-uppercase">Today's Revenue</span>
+                <span class="p-2 rounded-circle bg-success-subtle text-success"><i class="bi bi-currency-rupee fs-5"></i></span>
+            </div>
+            <div class="fs-3 fw-extrabold text-dark mb-1">@Html.FormatCurrency(kpis.TodayRevenue)</div>
+            <div class="text-secondary small">Lifetime Total: <strong class="text-dark">@Html.FormatCurrency(kpis.TotalRevenue)</strong></div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-sm-6">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="text-secondary small fw-semibold text-uppercase">Active Kitchen Orders</span>
+                <span class="p-2 rounded-circle bg-warning-subtle text-warning"><i class="bi bi-fire fs-5"></i></span>
+            </div>
+            <div class="fs-3 fw-extrabold text-warning mb-1">@kpis.ActiveOrdersCount Active</div>
+            <div class="text-secondary small">Today's Settled Orders: <strong class="text-dark">@kpis.TodayOrdersCount</strong></div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-sm-6">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="text-secondary small fw-semibold text-uppercase">Today's Bookings</span>
+                <span class="p-2 rounded-circle bg-info-subtle text-info"><i class="bi bi-calendar-check-fill fs-5"></i></span>
+            </div>
+            <div class="fs-3 fw-extrabold text-dark mb-1">@kpis.TodayReservationsCount Reserved</div>
+            <div class="text-secondary small">Open Tables: <strong class="text-success">@kpis.AvailableTablesCount Tables</strong></div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-sm-6">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="text-secondary small fw-semibold text-uppercase">Active Menu Dishes</span>
+                <span class="p-2 rounded-circle bg-primary-subtle text-primary"><i class="bi bi-journal-check fs-5"></i></span>
+            </div>
+            <div class="fs-3 fw-extrabold text-dark mb-1">@kpis.TotalMenuItemsCount Items</div>
+            <div class="text-secondary small"><a asp-area="Admin" asp-controller="MenuItems" asp-action="Create" class="text-decoration-none">+ Add New Dish</a></div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Row: Live Kitchen POS & Upcoming Reservations -->
+<div class="row g-4 mb-4">
+    <!-- Live Recent Orders Table -->
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden">
+            <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                <h6 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
+                    <i class="bi bi-clock-history text-warning"></i> Recent POS & Dining Orders
+                </h6>
+                <a asp-area="Admin" asp-controller="Orders" asp-action="Index" class="text-decoration-none small fw-bold">View All Orders &rarr;</a>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light text-secondary small text-uppercase">
+                        <tr>
+                            <th>Order #</th>
+                            <th>Time</th>
+                            <th>Table / Mode</th>
+                            <th>Customer</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th class="text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var order in recentOrders)
+                        {
+                            <tr>
+                                <td class="fw-bold text-dark">
+                                    <a asp-area="Admin" asp-controller="Orders" asp-action="Details" asp-route-id="@order.OrderId" class="text-decoration-none text-dark">
+                                        @order.OrderNumber
+                                    </a>
+                                </td>
+                                <td class="small text-secondary">@order.OrderDate.ToString("hh:mm tt")</td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">
+                                        @(order.Table != null ? $"Table {order.Table.TableNumber}" : order.OrderType)
+                                    </span>
+                                </td>
+                                <td class="small fw-medium">@order.CustomerName</td>
+                                <td class="fw-bold text-dark">@Html.FormatCurrency(order.TotalAmount)</td>
+                                <td>
+                                    <status-badge status="@order.OrderStatus"></status-badge>
+                                </td>
+                                <td class="text-end">
+                                    @if (order.OrderStatus == "Placed")
+                                    {
+                                        <button type="button" class="btn btn-warning btn-sm rounded-pill px-2" onclick="RestaurantApp.updateOrderStatus(@order.OrderId, 'Preparing')">
+                                            Start Prep
+                                        </button>
+                                    }
+                                    else if (order.OrderStatus == "Preparing")
+                                    {
+                                        <button type="button" class="btn btn-primary btn-sm rounded-pill px-2" onclick="RestaurantApp.updateOrderStatus(@order.OrderId, 'Ready')">
+                                            Mark Ready
+                                        </button>
+                                    }
+                                    else if (order.OrderStatus == "Ready")
+                                    {
+                                        <button type="button" class="btn btn-success btn-sm rounded-pill px-2" onclick="RestaurantApp.updateOrderStatus(@order.OrderId, 'Completed')">
+                                            Serve
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <a asp-area="Admin" asp-controller="Orders" asp-action="Details" asp-route-id="@order.OrderId" class="btn btn-light btn-sm rounded-pill px-2">
+                                            Details
+                                        </a>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upcoming Reservations -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden h-100">
+            <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                <h6 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
+                    <i class="bi bi-calendar-event text-info"></i> Upcoming Bookings
+                </h6>
+                <a asp-area="Admin" asp-controller="Reservations" asp-action="Index" class="text-decoration-none small fw-bold">Manage &rarr;</a>
+            </div>
+
+            <div class="p-3">
+                @if (!upcomingReservations.Any())
+                {
+                    <div class="text-center py-4 text-secondary small">
+                        No upcoming reservations scheduled for today.
+                    </div>
+                }
+                else
+                {
+                    <div class="d-flex flex-column gap-3">
+                        @foreach (var res in upcomingReservations)
+                        {
+                            <div class="p-3 rounded-3 bg-light border">
+                                <div class="d-flex justify-content-between align-items-start mb-1">
+                                    <span class="fw-bold text-dark">@res.CustomerName</span>
+                                    <span class="badge bg-primary rounded-pill">Table @(res.Table?.TableNumber ?? "T-Pending")</span>
+                                </div>
+                                <div class="d-flex justify-content-between small text-secondary">
+                                    <span><i class="bi bi-clock me-1"></i> @res.TimeSlot</span>
+                                    <span><i class="bi bi-people me-1"></i> @res.GuestCount Guests</span>
+                                </div>
+                                @if (!string.IsNullOrEmpty(res.SpecialRequests))
+                                {
+                                    <div class="small text-muted mt-2 border-top pt-1 fst-italic">
+                                        "@res.SpecialRequests"
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,190 @@
+@using Restaurant_Management.Models.Entities
+@{
+    ViewData["Title"] = "Fine Dining & Culinary Excellence";
+    var featuredItems = ViewBag.FeaturedItems as List<MenuItem> ?? new List<MenuItem>();
+    var categories = ViewBag.Categories as List<Category> ?? new List<Category>();
+    var availableTables = (int)(ViewBag.AvailableTablesCount ?? 0);
+}
+
+<!-- Hero Banner Section -->
+<section class="hero-banner mb-5">
+    <div class="container text-center py-4">
+        <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-white bg-opacity-10 border border-white border-opacity-20 mb-3 backdrop-blur">
+            <span class="badge bg-warning text-dark rounded-pill">NEW SEASON</span>
+            <span class="small text-white-50">Artisan Wood-Fired & Pan-Asian Specialties</span>
+        </div>
+        
+        <h1 class="display-3 fw-extrabold mb-3 tracking-tight">
+            An Unforgettable <span class="brand-gold">Gastronomic</span> Journey
+        </h1>
+        <p class="lead text-light text-opacity-75 mx-auto mb-4" style="max-width: 680px;">
+            Immerse yourself in sensory flavors crafted by world-class culinary artists. Experience dynamic instant ordering, live table reservations, and seamless dining.
+        </p>
+
+        <div class="d-flex flex-wrap justify-content-center gap-3">
+            <a asp-controller="Menu" asp-action="Index" class="btn btn-gold btn-lg rounded-pill px-4 py-3 shadow-lg">
+                <i class="bi bi-journal-richtext me-2"></i> Explore Our Menu
+            </a>
+            <a asp-controller="Reservation" asp-action="Book" class="btn btn-outline-light btn-lg rounded-pill px-4 py-3">
+                <i class="bi bi-calendar2-check me-2"></i> Reserve a Table (@availableTables Open)
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Quick Stats Bar -->
+<div class="container mb-5">
+    <div class="row g-3 p-4 rounded-4 bg-white shadow-sm border">
+        <div class="col-md-3 col-6 text-center border-end-md">
+            <div class="fs-2 fw-extrabold text-dark">4.9 ★</div>
+            <div class="text-secondary small">Over 2,400+ Foodie Reviews</div>
+        </div>
+        <div class="col-md-3 col-6 text-center border-end-md">
+            <div class="fs-2 fw-extrabold text-warning">18+</div>
+            <div class="text-secondary small">Artisan Masterpiece Dishes</div>
+        </div>
+        <div class="col-md-3 col-6 text-center border-end-md">
+            <div class="fs-2 fw-extrabold text-success">12</div>
+            <div class="text-secondary small">Luxury Dining Tables</div>
+        </div>
+        <div class="col-md-3 col-6 text-center">
+            <div class="fs-2 fw-extrabold text-primary">15 Mins</div>
+            <div class="text-secondary small">Average Preparation Time</div>
+        </div>
+    </div>
+</div>
+
+<!-- Menu Categories Showcase -->
+<section class="container mb-5">
+    <div class="d-flex justify-content-between align-items-end mb-4">
+        <div>
+            <span class="text-warning text-uppercase fw-bold fs-7 letter-spacing-1">Flavors of the World</span>
+            <h2 class="fw-extrabold text-dark mb-0">Browse By Culinary Category</h2>
+        </div>
+        <a asp-controller="Menu" asp-action="Index" class="btn btn-outline-dark rounded-pill px-4 btn-sm">
+            View All Dishes <i class="bi bi-arrow-right ms-1"></i>
+        </a>
+    </div>
+
+    <div class="row g-4">
+        @foreach (var cat in categories)
+        {
+            <div class="col-lg-2 col-md-4 col-6">
+                <a asp-controller="Menu" asp-action="Index" asp-route-categoryId="@cat.CategoryId" class="text-decoration-none">
+                    <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden card-hover-zoom text-center">
+                        <div style="height: 120px; overflow: hidden;">
+                            <img src="@cat.ImageUrl" alt="@cat.Name" class="w-100 h-100 object-fit-cover dish-img" />
+                        </div>
+                        <div class="card-body p-2">
+                            <h6 class="fw-bold text-dark mb-0 small">@cat.Name</h6>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        }
+    </div>
+</section>
+
+<!-- Chef's Featured Specialties -->
+<section class="container mb-5">
+    <div class="text-center mb-5">
+        <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-3 py-2 rounded-pill fw-bold mb-2">CHEF'S SELECTION</span>
+        <h2 class="display-6 fw-extrabold text-dark">Handcrafted Signature Dishes</h2>
+        <p class="text-secondary mx-auto" style="max-width: 540px;">
+            Specially curated by our executive culinary masters using seasonal farm-to-table produce and aromatic spices.
+        </p>
+    </div>
+
+    <div class="row g-4">
+        @foreach (var item in featuredItems)
+        {
+            <div class="col-lg-4 col-md-6">
+                @await Html.PartialAsync("_MenuItemCardPartial", item)
+            </div>
+        }
+    </div>
+
+    <div class="text-center mt-4">
+        <a asp-controller="Menu" asp-action="Index" class="btn btn-dark btn-lg rounded-pill px-5">
+            <i class="bi bi-grid-fill me-2"></i> View Full Restaurant Menu
+        </a>
+    </div>
+</section>
+
+<!-- Luxury Dining Ambiance Showcase -->
+<section class="bg-dark text-white py-5 my-5 rounded-4 shadow-lg mx-auto" style="max-width: 95%;">
+    <div class="container py-3">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6">
+                <span class="text-warning text-uppercase fw-bold fs-7">The Ambience</span>
+                <h2 class="display-6 fw-extrabold mb-3">Designed for Unforgettable Moments</h2>
+                <p class="text-light text-opacity-75 mb-4">
+                    Whether you are planning an intimate candlelight anniversary, an upbeat family reunion, or an executive business dinner, Le Gourmet offers tailored spaces:
+                </p>
+
+                <div class="d-flex flex-column gap-3">
+                    <div class="d-flex align-items-center gap-3 p-3 rounded-3 bg-white bg-opacity-10 border border-white border-opacity-10">
+                        <i class="bi bi-stars text-warning fs-3"></i>
+                        <div>
+                            <h6 class="fw-bold mb-0 text-white">Private VIP Lounge & Suites</h6>
+                            <small class="text-light text-opacity-75">Dedicated sommelier and personalized five-course degustation menu.</small>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-3 p-3 rounded-3 bg-white bg-opacity-10 border border-white border-opacity-10">
+                        <i class="bi bi-sunset-fill text-warning fs-3"></i>
+                        <div>
+                            <h6 class="fw-bold mb-0 text-white">Garden Patio Alfresco Dining</h6>
+                            <small class="text-light text-opacity-75">Bask under fairy lights with acoustic ambient melodies.</small>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-3 p-3 rounded-3 bg-white bg-opacity-10 border border-white border-opacity-10">
+                        <i class="bi bi-calendar-check-fill text-warning fs-3"></i>
+                        <div>
+                            <h6 class="fw-bold mb-0 text-white">Zero Wait-Time Reservation</h6>
+                            <small class="text-light text-opacity-75">Book your exact preferred table online in under 60 seconds.</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <a asp-controller="Reservation" asp-action="Book" class="btn btn-gold btn-lg rounded-pill px-4">
+                        Book Your Table Now
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="row g-3">
+                    <div class="col-6">
+                        <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=80" alt="Restaurant Interior" class="img-fluid rounded-4 shadow mb-3" />
+                        <img src="https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?auto=format&fit=crop&w=800&q=80" alt="Dining Table" class="img-fluid rounded-4 shadow" />
+                    </div>
+                    <div class="col-6 pt-4">
+                        <img src="https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&w=800&q=80" alt="Romantic Candlelight" class="img-fluid rounded-4 shadow mb-3" />
+                        <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80" alt="Outdoor Patio" class="img-fluid rounded-4 shadow" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- College Presentation Banner / Fast Access -->
+<div class="container mb-5">
+    <div class="p-4 p-md-5 rounded-4 bg-primary text-white position-relative overflow-hidden shadow">
+        <div class="row align-items-center position-relative z-1">
+            <div class="col-lg-8">
+                <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold mb-2">PROJECT 09: POS & RESERVATIONS</span>
+                <h3 class="fw-extrabold mb-2">Demonstration & Evaluation Ready</h3>
+                <p class="mb-0 text-white-50">
+                    Test the complete end-to-end workflow: dynamic menu filtering, persistent cart in Session, simulated payment gateway with receipt generation, and real-time Admin LINQ demand reports!
+                </p>
+            </div>
+            <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                <a asp-controller="Account" asp-action="QuickLogin" asp-route-role="admin" class="btn btn-warning btn-lg rounded-pill px-4 fw-bold shadow">
+                    <i class="bi bi-speedometer2 me-1"></i> Launch Admin POS
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

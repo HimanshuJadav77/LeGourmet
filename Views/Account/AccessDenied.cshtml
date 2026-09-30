@@ -1,0 +1,21 @@
+@{
+    ViewData["Title"] = "Access Denied";
+}
+
+<div class="container py-5 text-center" style="max-width: 540px;">
+    <div class="card border-0 shadow-sm rounded-4 p-5 bg-white">
+        <i class="bi bi-shield-slash fs-1 text-danger d-block mb-3"></i>
+        <h3 class="fw-extrabold text-dark mb-2">Access Denied</h3>
+        <p class="text-secondary mb-4">
+            You do not have administrative privileges to access this area. Please sign in with an Administrator account.
+        </p>
+        <div class="d-flex justify-content-center gap-2">
+            <a asp-controller="Account" asp-action="QuickLogin" asp-route-role="admin" class="btn btn-warning rounded-pill px-4">
+                <i class="bi bi-key-fill me-1"></i> Sign In as Admin
+            </a>
+            <a asp-controller="Home" asp-action="Index" class="btn btn-outline-dark rounded-pill px-4">
+                Home
+            </a>
+        </div>
+    </div>
+</div>

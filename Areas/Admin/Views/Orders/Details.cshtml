@@ -1,0 +1,89 @@
+@model Restaurant_Management.Models.Entities.Order
+@{
+    ViewData["Title"] = $"Order Details - {Model.OrderNumber}";
+}
+
+<div class="container-fluid py-2" style="max-width: 960px;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a asp-action="Index">Orders</a></li>
+                    <li class="breadcrumb-item active">@Model.OrderNumber</li>
+                </ol>
+            </nav>
+            <h3 class="fw-extrabold text-dark mb-0">POS Order Details & Kitchen Ticket</h3>
+        </div>
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-outline-dark rounded-pill px-3" onclick="window.print()">
+                <i class="bi bi-printer me-1"></i> Print Ticket
+            </button>
+            <a asp-action="Index" class="btn btn-dark rounded-pill px-3">
+                &larr; Back to POS
+            </a>
+        </div>
+    </div>
+
+    <!-- Status Advance Banner -->
+    <div class="card border-0 shadow-sm rounded-4 p-3 bg-white mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <span class="text-secondary fw-semibold">Current State:</span>
+                <status-badge status="@Model.OrderStatus"></status-badge>
+            </div>
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-outline-warning" onclick="RestaurantApp.updateOrderStatus(@Model.OrderId, 'Preparing')">
+                    Set Preparing
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-primary" onclick="RestaurantApp.updateOrderStatus(@Model.OrderId, 'Ready')">
+                    Set Ready
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-success" onclick="RestaurantApp.updateOrderStatus(@Model.OrderId, 'Completed')">
+                    Set Completed
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Render Receipt -->
+    @{
+        var receiptModel = new Restaurant_Management.Models.ViewModels.OrderReceiptViewModel
+        {
+            OrderId = Model.OrderId,
+            OrderNumber = Model.OrderNumber,
+            OrderDate = Model.OrderDate,
+            OrderType = Model.OrderType,
+            OrderStatus = Model.OrderStatus,
+            TableNumber = Model.Table?.TableNumber,
+            TableLocation = Model.Table?.Location,
+            CustomerName = Model.CustomerName,
+            CustomerPhone = Model.CustomerPhone,
+            CustomerEmail = Model.CustomerEmail,
+            OrderNotes = Model.OrderNotes,
+            SubTotal = Model.SubTotal,
+            TaxAmount = Model.TaxAmount,
+            TotalAmount = Model.TotalAmount,
+            Items = Model.OrderItems.Select(oi => new Restaurant_Management.Models.ViewModels.OrderItemViewModel
+            {
+                ItemName = oi.MenuItem?.Name ?? "Dish",
+                Quantity = oi.Quantity,
+                UnitPrice = oi.UnitPrice,
+                LineTotal = oi.LineTotal,
+                IsVegetarian = oi.MenuItem?.IsVegetarian ?? true
+            }).ToList(),
+            Payment = Model.PaymentTransaction != null ? new Restaurant_Management.Models.ViewModels.PaymentTransactionViewModel
+            {
+                TransactionReference = Model.PaymentTransaction.TransactionReference,
+                PaymentMethod = Model.PaymentTransaction.PaymentMethod,
+                Amount = Model.PaymentTransaction.Amount,
+                PaymentDate = Model.PaymentTransaction.PaymentDate,
+                Status = Model.PaymentTransaction.Status,
+                CardLastFour = Model.PaymentTransaction.CardLastFour,
+                UpiId = Model.PaymentTransaction.UpiId,
+                GatewayAuthCode = Model.PaymentTransaction.GatewayAuthCode
+            } : null
+        };
+    }
+
+    @await Html.PartialAsync("_OrderReceiptPartial", receiptModel)
+</div>

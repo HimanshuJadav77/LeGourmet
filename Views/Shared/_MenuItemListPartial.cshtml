@@ -1,0 +1,22 @@
+@model IEnumerable<Restaurant_Management.Models.Entities.MenuItem>
+
+@if (!Model.Any())
+{
+    <div class="col-12 py-5 text-center">
+        <div class="p-5 rounded-4 bg-white border border-light-subtle shadow-sm mx-auto" style="max-width: 500px;">
+            <i class="bi bi-search fs-1 text-muted d-block mb-3"></i>
+            <h5 class="fw-bold">No dishes found matching your criteria</h5>
+            <p class="text-secondary small mb-3">Try adjusting your search query, switching categories, or toggling vegetarian filter.</p>
+            <a href="@Url.Action("Index", "Menu")" class="btn btn-outline-dark rounded-pill btn-sm px-4">Reset Filters</a>
+        </div>
+    </div>
+}
+else
+{
+    @foreach (var item in Model)
+    {
+        <div class="col-xl-4 col-md-6 mb-4">
+            @await Html.PartialAsync("_MenuItemCardPartial", item)
+        </div>
+    }
+}

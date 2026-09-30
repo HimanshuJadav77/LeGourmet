@@ -1,0 +1,67 @@
+@model Restaurant_Management.Models.ViewModels.ReservationConfirmationViewModel
+@{
+    ViewData["Title"] = $"Reservation Confirmed - #{Model.ReservationId}";
+}
+
+<div class="container py-5" style="max-width: 760px;">
+    <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white text-center">
+        <div class="p-3 rounded-circle bg-success-subtle text-success d-inline-flex mx-auto mb-3">
+            <i class="bi bi-calendar-check-fill fs-1"></i>
+        </div>
+
+        <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill mx-auto mb-2 fw-semibold">
+            BOOKING CONFIRMED & ALLOCATED
+        </span>
+
+        <h2 class="fw-extrabold text-dark mb-1">Your Table is Reserved!</h2>
+        <p class="text-secondary small mb-4">A confirmation receipt has been generated. We look forward to hosting you.</p>
+
+        <div class="p-4 rounded-4 bg-light border text-start mb-4">
+            <div class="row g-3">
+                <div class="col-sm-6">
+                    <span class="text-secondary small d-block">Reservation Reference</span>
+                    <span class="fw-bold text-dark fs-5">#RES-@Model.ReservationId.ToString("D5")</span>
+                </div>
+                <div class="col-sm-6">
+                    <span class="text-secondary small d-block">Reserved Table</span>
+                    <span class="fw-bold text-primary fs-5">Table @Model.TableNumber (@Model.Location)</span>
+                </div>
+                <div class="col-sm-6">
+                    <span class="text-secondary small d-block">Date</span>
+                    <span class="fw-semibold text-dark">@Model.ReservationDate.ToString("dddd, dd MMMM yyyy")</span>
+                </div>
+                <div class="col-sm-6">
+                    <span class="text-secondary small d-block">Dining Time Slot</span>
+                    <span class="fw-semibold text-dark">@Model.TimeSlot</span>
+                </div>
+                <div class="col-sm-6">
+                    <span class="text-secondary small d-block">Guests Party Size</span>
+                    <span class="fw-semibold text-dark">@Model.GuestCount Guests</span>
+                </div>
+                <div class="col-sm-6">
+                    <span class="text-secondary small d-block">Guest Contact</span>
+                    <span class="fw-semibold text-dark">@Model.CustomerName (@Model.CustomerPhone)</span>
+                </div>
+                @if (!string.IsNullOrEmpty(Model.SpecialRequests))
+                {
+                    <div class="col-12 border-top pt-2">
+                        <span class="text-secondary small d-block">Special Requests</span>
+                        <span class="text-dark fst-italic">"@Model.SpecialRequests"</span>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="d-flex flex-wrap justify-content-center gap-3">
+            <a asp-controller="Menu" asp-action="Index" class="btn btn-gold rounded-pill px-4 py-2">
+                <i class="bi bi-journal-richtext me-1"></i> Pre-Order Food Online
+            </a>
+            <a asp-controller="Home" asp-action="Index" class="btn btn-outline-dark rounded-pill px-4 py-2">
+                Return to Home
+            </a>
+            <button type="button" class="btn btn-outline-secondary rounded-pill px-4 py-2" onclick="window.print()">
+                <i class="bi bi-printer me-1"></i> Print Voucher
+            </button>
+        </div>
+    </div>
+</div>

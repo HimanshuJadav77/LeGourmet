@@ -1,0 +1,156 @@
+@model Restaurant_Management.Models.ViewModels.TableBookingViewModel
+@{
+    ViewData["Title"] = "Reserve a Table";
+}
+
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-3 py-2 rounded-pill fw-bold mb-2">
+            PRE-BOOKING SERVICE
+        </span>
+        <h1 class="display-5 fw-extrabold text-dark">Reserve Your Fine Dining Table</h1>
+        <p class="text-secondary mx-auto" style="max-width: 580px;">
+            Guarantee your seating in advance. Choose your preferred dining atmosphere from romantic booths to open-air garden patios.
+        </p>
+    </div>
+
+    <div class="row g-5">
+        <!-- Reservation Form -->
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
+                <h4 class="fw-bold mb-4 text-dark d-flex align-items-center gap-2">
+                    <i class="bi bi-calendar2-check text-warning"></i> Reservation Details
+                </h4>
+
+                <form asp-controller="Reservation" asp-action="Book" method="post" id="reservationForm">
+                    @Html.AntiForgeryToken()
+
+                    <div class="row g-3 mb-4">
+                        <!-- Date -->
+                        <div class="col-md-6">
+                            <label asp-for="ReservationDate" class="form-label small fw-semibold text-secondary"></label>
+                            <input asp-for="ReservationDate" class="form-control" type="date" min="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                            <span asp-validation-for="ReservationDate" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Time Slot -->
+                        <div class="col-md-6">
+                            <label asp-for="TimeSlot" class="form-label small fw-semibold text-secondary"></label>
+                            <select asp-for="TimeSlot" class="form-select">
+                                <optgroup label="Lunch Service">
+                                    <option value="12:00 - 13:30">12:00 PM - 01:30 PM</option>
+                                    <option value="12:30 - 14:00">12:30 PM - 02:00 PM</option>
+                                    <option value="13:30 - 15:00">01:30 PM - 03:00 PM</option>
+                                </optgroup>
+                                <optgroup label="Dinner Service">
+                                    <option value="18:30 - 20:00">06:30 PM - 08:00 PM</option>
+                                    <option value="19:30 - 21:00" selected>07:30 PM - 09:00 PM</option>
+                                    <option value="20:00 - 21:30">08:00 PM - 09:30 PM</option>
+                                    <option value="21:00 - 22:30">09:00 PM - 10:30 PM</option>
+                                </optgroup>
+                            </select>
+                            <span asp-validation-for="TimeSlot" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Guest Count -->
+                        <div class="col-md-6">
+                            <label asp-for="GuestCount" class="form-label small fw-semibold text-secondary"></label>
+                            <input asp-for="GuestCount" class="form-control" type="number" min="1" max="20" />
+                            <span asp-validation-for="GuestCount" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Table Choice (Updated via AJAX) -->
+                        <div class="col-md-6">
+                            <label asp-for="TableId" class="form-label small fw-semibold text-secondary d-flex align-items-center justify-content-between">
+                                <span>Choose Table</span>
+                                <span id="tableSelectLoader" class="spinner-border spinner-border-sm text-warning d-none" role="status"></span>
+                            </label>
+                            <select asp-for="TableId" class="form-select">
+                                @foreach (var t in Model.AvailableTables)
+                                {
+                                    <option value="@t.TableId">Table @t.TableNumber (@t.Location - @t.Capacity Guests)</option>
+                                }
+                            </select>
+                            <span asp-validation-for="TableId" class="text-danger small"></span>
+                        </div>
+
+                        <div id="noTablesAlert" class="col-12 d-none">
+                            <div class="alert alert-warning py-2 small mb-0">
+                                <i class="bi bi-info-circle me-1"></i> No tables available for this exact time and guest count. Try another slot or date.
+                            </div>
+                        </div>
+                    </div>
+
+                    <h5 class="fw-bold mb-3 text-dark d-flex align-items-center gap-2 pt-2 border-top">
+                        <i class="bi bi-person-lines-fill text-warning"></i> Contact Information
+                    </h5>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label asp-for="CustomerName" class="form-label small fw-semibold text-secondary"></label>
+                            <input asp-for="CustomerName" class="form-control" placeholder="Full name" />
+                            <span asp-validation-for="CustomerName" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="CustomerPhone" class="form-label small fw-semibold text-secondary"></label>
+                            <input asp-for="CustomerPhone" class="form-control" placeholder="+91 98123 45678" />
+                            <span asp-validation-for="CustomerPhone" class="text-danger small"></span>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="CustomerEmail" class="form-label small fw-semibold text-secondary"></label>
+                            <input asp-for="CustomerEmail" class="form-control" placeholder="name@example.com" />
+                            <span asp-validation-for="CustomerEmail" class="text-danger small"></span>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="SpecialRequests" class="form-label small fw-semibold text-secondary"></label>
+                            <textarea asp-for="SpecialRequests" class="form-control" rows="2" placeholder="Birthday, anniversary, candle setup, high chair requirement..."></textarea>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-gold btn-lg rounded-pill w-100 py-3 fw-bold shadow">
+                        <i class="bi bi-calendar-check me-2"></i> Confirm Pre-Booking
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Right Side: Dining Areas & Ambience Info -->
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+                <h5 class="fw-bold mb-3 text-dark">Our Dining Ambience Areas</h5>
+
+                <div class="d-flex flex-column gap-3">
+                    <div class="p-3 rounded-3 bg-light border">
+                        <div class="fw-bold text-dark"><i class="bi bi-window-dock text-warning me-1"></i> Window View Seating</div>
+                        <small class="text-secondary">Tables with panoramic street and skyline views. Ideal for couples and intimate conversations.</small>
+                    </div>
+                    <div class="p-3 rounded-3 bg-light border">
+                        <div class="fw-bold text-dark"><i class="bi bi-heart-fill text-danger me-1"></i> Romantic Velvet Booths</div>
+                        <small class="text-secondary">Plush velvet booths with warm dim candlelight. Highly requested for anniversaries.</small>
+                    </div>
+                    <div class="p-3 rounded-3 bg-light border">
+                        <div class="fw-bold text-dark"><i class="bi bi-flower1 text-success me-1"></i> Garden Patio (Alfresco)</div>
+                        <small class="text-secondary">Breezy outdoor seating surrounded by lush foliage and fairy lights.</small>
+                    </div>
+                    <div class="p-3 rounded-3 bg-light border">
+                        <div class="fw-bold text-dark"><i class="bi bi-gem text-primary me-1"></i> VIP Executive Suites</div>
+                        <small class="text-secondary">Private enclosed dining area for 8 to 12 guests with dedicated waitstaff.</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 rounded-4 bg-dark text-white shadow-sm">
+                <h6 class="fw-bold text-warning mb-2"><i class="bi bi-info-circle me-1"></i> Reservation Policy</h6>
+                <ul class="list-unstyled small text-light text-opacity-75 d-flex flex-column gap-2 mb-0">
+                    <li>• Tables are held for up to 15 minutes past the reserved time slot.</li>
+                    <li>• No reservation fee or advance deposit required.</li>
+                    <li>• Instant SMS & Email booking confirmation receipt.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,52 @@
+@model Restaurant_Management.Models.Entities.MenuItem
+@{
+    ViewData["Title"] = $"Delete - {Model.Name}";
+}
+
+<div class="container-fluid py-3 text-center" style="max-width: 600px;">
+    <div class="card border-0 shadow-sm rounded-4 p-5 bg-white">
+        <i class="bi bi-trash3 fs-1 text-danger d-block mb-3"></i>
+        <h3 class="fw-extrabold text-dark mb-2">Delete Menu Dish?</h3>
+        <p class="text-secondary mb-4">
+            Are you sure you want to permanently delete <strong>@Model.Name</strong> from the menu? This action cannot be undone.
+        </p>
+
+        @{
+            int orderCount = (int)(ViewBag.OrderCount ?? 0);
+        }
+
+        @if (orderCount > 0)
+        {
+            <div class="alert alert-warning text-start mb-4 rounded-3">
+                <i class="bi bi-info-circle-fill text-warning me-2"></i>
+                <strong>Order History Protection:</strong> This dish is part of <strong>@orderCount</strong> historical customer orders. To protect financial receipts and sales statistics, confirming will <strong>archive / deactivate</strong> this dish so it disappears from customer menus and POS, while keeping transaction history intact.
+            </div>
+        }
+
+        <div class="p-3 rounded-3 bg-light border text-start mb-4">
+            <div class="d-flex justify-content-between mb-1">
+                <span class="text-secondary small">Category:</span>
+                <span class="fw-semibold">@Model.Category?.Name</span>
+            </div>
+            <div class="d-flex justify-content-between mb-1">
+                <span class="text-secondary small">Price:</span>
+                <span class="fw-bold text-dark">@Html.FormatCurrency(Model.Price)</span>
+            </div>
+            <div class="d-flex justify-content-between">
+                <span class="text-secondary small">Type:</span>
+                <span>@(Model.IsVegetarian ? "Vegetarian" : "Non-Vegetarian")</span>
+            </div>
+        </div>
+
+        <form asp-action="Delete" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="MenuItemId" />
+            <div class="d-flex justify-content-center gap-2">
+                <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">Cancel</a>
+                <button type="submit" class="btn @(orderCount > 0 ? "btn-warning" : "btn-danger") rounded-pill px-5 fw-bold shadow">
+                    @(orderCount > 0 ? "Archive / Deactivate Dish" : "Confirm Delete")
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

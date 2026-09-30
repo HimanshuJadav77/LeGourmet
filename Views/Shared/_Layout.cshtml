@@ -1,0 +1,225 @@
+@using System.Security.Claims
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Le Gourmet Restaurant & POS</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap 5.3 & Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    <header class="sticky-top">
+        <nav class="navbar navbar-expand-lg navbar-dark navbar-custom py-2">
+            <div class="container">
+                <a class="navbar-brand d-flex align-items-center gap-2" asp-area="" asp-controller="Home" asp-action="Index">
+                    <span class="p-2 rounded-3 bg-warning text-dark d-inline-flex align-items-center justify-content-center shadow-sm" style="width: 38px; height: 38px;">
+                        <i class="bi bi-cup-hot-fill fs-5"></i>
+                    </span>
+                    <span>Le<span class="brand-gold">Gourmet</span></span>
+                    <span class="badge bg-secondary-subtle text-light border border-secondary fw-normal fs-6 px-2 py-0 ms-1 d-none d-sm-inline">POS & Dining</span>
+                </a>
+
+                <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="navbarMain">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3">
+                        <li class="nav-item">
+                            <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Home" ? "active" : "")" asp-area="" asp-controller="Home" asp-action="Index">
+                                <i class="bi bi-house me-1"></i> Home
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Menu" ? "active" : "")" asp-area="" asp-controller="Menu" asp-action="Index">
+                                <i class="bi bi-journal-richtext me-1"></i> Food Menu
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Reservation" ? "active" : "")" asp-area="" asp-controller="Reservation" asp-action="Book">
+                                <i class="bi bi-calendar-check me-1"></i> Table Reservation
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Order" ? "active" : "")" asp-area="" asp-controller="Order" asp-action="Track">
+                                <i class="bi bi-geo-alt me-1"></i> Track Order
+                            </a>
+                        </li>
+                    </ul>
+
+                    <div class="d-flex align-items-center gap-2">
+                        <!-- Shopping Cart Link with Live Badge -->
+                        <a asp-area="" asp-controller="Cart" asp-action="Index" class="btn btn-outline-light position-relative rounded-pill px-3 me-2" title="View Order Basket">
+                            <i class="bi bi-bag-check-fill text-warning me-1"></i>
+                            <span class="d-none d-md-inline">Basket</span>
+                            <span id="cartBadge" class="cart-badge d-none">0</span>
+                        </a>
+
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <div class="dropdown">
+                                <button class="btn btn-dark border border-secondary text-white dropdown-toggle rounded-pill px-3 d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown">
+                                    <i class="bi bi-person-circle text-warning"></i>
+                                    <span>@User.Identity.Name</span>
+                                    @if (User.IsInRole("Admin"))
+                                    {
+                                        <span class="badge bg-danger rounded-pill">Admin</span>
+                                    }
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-2">
+                                    @if (User.IsInRole("Admin"))
+                                    {
+                                        <li>
+                                            <a class="dropdown-item py-2 fw-semibold text-danger" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
+                                                <i class="bi bi-speedometer2 me-2"></i> Admin Dashboard & POS
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item py-2" asp-area="Admin" asp-controller="Reports" asp-action="Index">
+                                                <i class="bi bi-graph-up-arrow me-2 text-primary"></i> Demand Reports
+                                            </a>
+                                        </li>
+                                        <li><hr class="dropdown-divider"></li>
+                                    }
+                                    <li>
+                                        <a class="dropdown-item py-2" asp-area="" asp-controller="Order" asp-action="MyOrders">
+                                            <i class="bi bi-receipt me-2 text-warning"></i> My Past Orders
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item py-2" asp-area="" asp-controller="Reservation" asp-action="MyBookings">
+                                            <i class="bi bi-calendar-heart me-2 text-info"></i> My Table Bookings
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <form asp-area="" asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="dropdown-item text-danger py-2">
+                                                <i class="bi bi-box-arrow-right me-2"></i> Sign Out
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+                        }
+                        else
+                        {
+                            <a asp-area="" asp-controller="Account" asp-action="Login" class="btn btn-outline-light rounded-pill px-3">
+                                <i class="bi bi-box-arrow-in-right me-1"></i> Sign In
+                            </a>
+                            <a asp-area="" asp-controller="Account" asp-action="Register" class="btn btn-gold rounded-pill px-3">
+                                Register
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Global Alert Notifications -->
+    <div class="container mt-3">
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show shadow-sm rounded-4 d-flex align-items-center" role="alert">
+                <i class="bi bi-check-circle-fill fs-4 me-2 text-success"></i>
+                <div class="fw-medium">@TempData["SuccessMessage"]</div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show shadow-sm rounded-4 d-flex align-items-center" role="alert">
+                <i class="bi bi-exclamation-triangle-fill fs-4 me-2 text-danger"></i>
+                <div class="fw-medium">@TempData["ErrorMessage"]</div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+    </div>
+
+    <main role="main" class="pb-5">
+        @RenderBody()
+    </main>
+
+    <!-- Master Footer -->
+    <footer class="bg-dark text-white pt-5 pb-4 mt-auto border-top border-secondary">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-4 col-md-6">
+                    <h5 class="fw-bold mb-3 d-flex align-items-center gap-2">
+                        <span class="p-1 rounded bg-warning text-dark d-inline-flex"><i class="bi bi-cup-hot-fill"></i></span>
+                        Le<span class="brand-gold">Gourmet</span>
+                    </h5>
+                    <p class="text-secondary small">
+                        Exquisite fine dining cuisine, wood-fired artisan creations, and state-of-the-art table reservation & point-of-sale management.
+                    </p>
+                    <div class="d-flex gap-2">
+                        <span class="badge bg-dark border border-secondary text-secondary p-2"><i class="bi bi-shield-check text-warning me-1"></i> FSSAI Certified</span>
+                        <span class="badge bg-dark border border-secondary text-secondary p-2"><i class="bi bi-star-fill text-warning me-1"></i> 4.9/5 Rating</span>
+                    </div>
+                </div>
+
+                <div class="col-lg-2 col-md-6">
+                    <h6 class="text-white fw-bold mb-3">Quick Navigation</h6>
+                    <ul class="list-unstyled text-secondary small d-flex flex-column gap-2">
+                        <li><a asp-controller="Home" asp-action="Index" class="text-secondary text-decoration-none hover-white">Home Showcase</a></li>
+                        <li><a asp-controller="Menu" asp-action="Index" class="text-secondary text-decoration-none hover-white">Explore Menu</a></li>
+                        <li><a asp-controller="Reservation" asp-action="Book" class="text-secondary text-decoration-none hover-white">Book a Table</a></li>
+                        <li><a asp-controller="Order" asp-action="Track" class="text-secondary text-decoration-none hover-white">Order Tracker</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="text-white fw-bold mb-3">Dining Hours</h6>
+                    <ul class="list-unstyled text-secondary small d-flex flex-column gap-2">
+                        <li><span class="text-white fw-medium">Mon - Fri:</span> 12:00 PM – 11:30 PM</li>
+                        <li><span class="text-white fw-medium">Sat - Sun:</span> 11:00 AM – 12:00 Midnight</li>
+                        <li><span class="text-warning"><i class="bi bi-lightning-charge-fill me-1"></i> Lunch Peak:</span> 12:30 PM – 2:30 PM</li>
+                        <li><span class="text-warning"><i class="bi bi-moon-stars-fill me-1"></i> Dinner Peak:</span> 7:30 PM – 10:30 PM</li>
+                    </ul>
+                </div>
+
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="text-white fw-bold mb-3">College Project Showcase</h6>
+                    <div class="p-3 rounded-3 bg-black border border-secondary small text-secondary">
+                        <div class="text-white fw-semibold mb-1">Project 09: POS & Reservation</div>
+                        <div>ASP.NET Core MVC (.NET 10)</div>
+                        <div>Stack: Unobtrusive AJAX, EF Core, Session State, LINQ Dynamic Reports</div>
+                        <div class="mt-2 pt-2 border-top border-secondary">
+                            <a asp-controller="Account" asp-action="QuickLogin" asp-route-role="admin" class="btn btn-warning btn-sm w-100 fw-bold">
+                                <i class="bi bi-key-fill me-1"></i> 1-Click Admin Demo Login
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="border-top border-secondary pt-3 mt-4 d-flex flex-column flex-md-row justify-content-between text-secondary small align-items-center gap-2">
+                <div>&copy; @DateTime.Now.Year Le Gourmet Restaurant & POS System. Built for academic excellence.</div>
+                <div>Configured with SQL Server LocalDB | .NET 10.0</div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/dist/jquery.validate.unobtrusive.min.js"></script>
+    <script src="~/js/restaurant.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

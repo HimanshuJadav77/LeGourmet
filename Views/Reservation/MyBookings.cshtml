@@ -1,0 +1,82 @@
+@model List<Restaurant_Management.Models.Entities.TableReservation>
+@{
+    ViewData["Title"] = "My Table Reservations";
+}
+
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="fw-extrabold text-dark mb-1">My Table Reservations</h1>
+            <p class="text-secondary small mb-0">Review past and upcoming dining bookings</p>
+        </div>
+        <a asp-controller="Reservation" asp-action="Book" class="btn btn-gold rounded-pill px-4">
+            <i class="bi bi-plus-lg me-1"></i> Book New Table
+        </a>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white">
+            <i class="bi bi-calendar-x fs-1 text-muted d-block mb-3"></i>
+            <h4 class="fw-bold">No reservations found</h4>
+            <p class="text-secondary mb-4">If you booked as a guest without signing in, look up using your registered phone or email below:</p>
+            
+            <form method="get" asp-controller="Reservation" asp-action="MyBookings" class="row g-2 justify-content-center mx-auto" style="max-width: 480px;">
+                <div class="col-8">
+                    <input type="text" name="phone" class="form-control" placeholder="Enter contact phone number" />
+                </div>
+                <div class="col-4">
+                    <button type="submit" class="btn btn-dark w-100">Find Booking</button>
+                </div>
+            </form>
+        </div>
+    }
+    else
+    {
+        <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light text-secondary small text-uppercase">
+                        <tr>
+                            <th>Ref #</th>
+                            <th>Table</th>
+                            <th>Date & Time</th>
+                            <th>Party Size</th>
+                            <th>Guest Name</th>
+                            <th>Status</th>
+                            <th class="text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var res in Model)
+                        {
+                            <tr>
+                                <td class="fw-bold text-dark">#RES-@res.ReservationId.ToString("D5")</td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">
+                                        Table @(res.Table?.TableNumber ?? "T-Pending")
+                                    </span>
+                                    <small class="text-secondary d-block">@(res.Table?.Location ?? "Main")</small>
+                                </td>
+                                <td>
+                                    <div class="fw-semibold text-dark">@res.ReservationDate.ToString("dd MMM yyyy")</div>
+                                    <small class="text-secondary">@res.TimeSlot</small>
+                                </td>
+                                <td><i class="bi bi-people me-1"></i> @res.GuestCount Guests</td>
+                                <td>@res.CustomerName</td>
+                                <td>
+                                    <status-badge status="@res.Status"></status-badge>
+                                </td>
+                                <td class="text-end">
+                                    <a asp-controller="Reservation" asp-action="Confirmation" asp-route-id="@res.ReservationId" class="btn btn-outline-dark btn-sm rounded-pill px-3">
+                                        View Voucher
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>
